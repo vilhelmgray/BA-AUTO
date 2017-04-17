@@ -74,8 +74,8 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam){
         if(nCode == HC_ACTION){
                 MSLLHOOKSTRUCT *mouseinfo = lParam;
 
-                int x = mouseinfo->pt.x;
-                int y = mouseinfo->pt.y;
+                unsigned x = mouseinfo->pt.x;
+                unsigned y = mouseinfo->pt.y;
                 RECT desktop;
                 if(GetWindowRect(GetDesktopWindow(), &desktop)){
                         x = 65535 * (double)x/desktop.right;
@@ -107,7 +107,7 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam){
                         event_time = mouseinfo->time - prev_event_time;
                 }
 
-                fprintf(record_fp, "0 %d %d 0x%lX 0x%lX 0x%lX 0x%lX\n", x, y, (unsigned long)mouseinfo->mouseData, flags, event_time, (unsigned long)mouseinfo->dwExtraInfo);
+                fprintf(record_fp, "0 %u %u 0x%lX 0x%lX 0x%lX 0x%lX\n", x, y, (unsigned long)mouseinfo->mouseData, flags, event_time, (unsigned long)mouseinfo->dwExtraInfo);
  
                 prev_event_time = mouseinfo->time;
         }
@@ -158,15 +158,19 @@ unsigned playEvents(FILE *fp){
                         curr->ei.ki.dwFlags = dwFlags;
                         curr->ei.ki.dwExtraInfo = dwExtraInfo;
                 }else{
+                        unsigned dx;
+                        unsigned dy;
                         unsigned long mouseData;
                         unsigned long dwFlags;
                         unsigned long dwExtraInfo;
-                        const int retval = sscanf(event_info, "%d %d %lX %lX %lX %lX", &curr->ei.mi.dx, &curr->ei.mi.dy, &mouseData, &dwFlags, &curr->delay_time, &dwExtraInfo);
+                        const int retval = sscanf(event_info, "%u %u %lX %lX %lX %lX", &dx, &dy, &mouseData, &dwFlags, &curr->delay_time, &dwExtraInfo);
                         if(retval < 6){
                                 fprintf(stderr, "Recording file syntax error\n");
                                 goto playEvents_err;
                         }
                         curr->ei.type = INPUT_MOUSE;
+                        curr->ei.mi.dx = dx;
+                        curr->ei.mi.dy = dy;
                         curr->ei.mi.mouseData = mouseData;
                         curr->ei.mi.dwFlags = dwFlags;
                         curr->ei.mi.dwExtraInfo = dwExtraInfo;
