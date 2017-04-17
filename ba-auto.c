@@ -36,8 +36,8 @@ struct event_input{
         unsigned long delay_time;
 };
 
-int numEvents;
 unsigned first_event = 1;
+unsigned long first_event_delay;
 unsigned long prev_event_time;
 unsigned loop = 1;
 
@@ -46,10 +46,6 @@ FILE *record_fp = NULL;
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam){
         if(nCode == HC_ACTION){
                 KBDLLHOOKSTRUCT *kbinfo = lParam;
-                if(first_event){
-                        prev_event_time = kbinfo->time;
-                        first_event = 0;
-                }
 
                 unsigned long flags = 0;
                 if(LLKHF_EXTENDED & kbinfo->flags){
@@ -58,12 +54,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam){
                 if(LLKHF_UP & kbinfo->flags){
                         flags |= KEYEVENTF_KEYUP;
                 }
-                const unsigned long event_time = kbinfo->time - prev_event_time;
+                unsigned long event_time;
+                if(first_event){
+                        event_time = first_event_delay;
+                        first_event = 0;
+                }else{
+                        event_time = kbinfo->time - prev_event_time;
+                }
 
                 fprintf(record_fp, "1 0x%lX 0x%lX 0x%lX 0x%lX 0x%lX\n", (unsigned long)kbinfo->vkCode, (unsigned long)kbinfo->scanCode, flags, event_time, (unsigned long)kbinfo->dwExtraInfo);
 
                 prev_event_time = kbinfo->time;
-                numEvents--;
         }
 
         return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -72,10 +73,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam){
 LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam){
         if(nCode == HC_ACTION){
                 MSLLHOOKSTRUCT *mouseinfo = lParam;
-                if(first_event){
-                        prev_event_time = mouseinfo->time;
-                        first_event = 0;
-                }
 
                 int x = mouseinfo->pt.x;
                 int y = mouseinfo->pt.y;
@@ -102,12 +99,17 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam){
                                 flags |= MOUSEEVENTF_RIGHTUP;
                                 break;
                 }
-                const unsigned long event_time = mouseinfo->time - prev_event_time;
+                unsigned long event_time;
+                if(first_event){
+                        event_time = first_event_delay;
+                        first_event = 0;
+                }else{
+                        event_time = mouseinfo->time - prev_event_time;
+                }
 
                 fprintf(record_fp, "0 %d %d 0x%lX 0x%lX 0x%lX 0x%lX\n", x, y, (unsigned long)mouseinfo->mouseData, flags, event_time, (unsigned long)mouseinfo->dwExtraInfo);
  
                 prev_event_time = mouseinfo->time;
-                numEvents--;
         }
 
         return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -196,7 +198,7 @@ playEvents_err:
         return 1;
 }
 
-unsigned recordEvents(void){
+unsigned recordEvents(const unsigned long delay_record_time, const unsigned long record_time){
         HHOOK hhkLowLevelKybd = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
         if(!hhkLowLevelKybd){
                 fprintf(stderr, "ERROR: Unable to attach low-level keyboard hook\n");
@@ -205,20 +207,32 @@ unsigned recordEvents(void){
         HHOOK hhkLowLevelMouse = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, NULL, 0);
         if(!hhkLowLevelMouse){
                 fprintf(stderr, "ERROR: Unable to attach low-level mouse hook\n");
-                UnhookWindowsHookEx(hhkLowLevelKybd);
-                return 1;
+                goto err_hhkLowLevelMouse;
         }
 
-        MSG msg;
-        while(numEvents && !PeekMessage(&msg, NULL, 0, 0, 0)){
+        Sleep(delay_record_time);
+
+        const DWORD start_tick_count = GetTickCount();
+        do{
+                MSG msg;
+                if(PeekMessage(&msg, NULL, 0, 0, 0)){
+                        fprintf(stderr, "ERROR: Unable to peek message\n");
+                        goto err_peekmessage;
+                }
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
-        }
+        }while(GetTickCount() - start_tick_count < record_time);
 
         UnhookWindowsHookEx(hhkLowLevelMouse);
         UnhookWindowsHookEx(hhkLowLevelKybd);
 
         return 0;
+
+err_peekmessage:
+        UnhookWindowsHookEx(hhkLowLevelMouse);
+err_hhkLowLevelMouse:
+        UnhookWindowsHookEx(hhkLowLevelKybd);
+        return 1;
 }
 
 int main(void){
@@ -291,15 +305,33 @@ int main(void){
                                 break;
                         }
                 }while(1);
+                unsigned long delay_record_time;
                 do{
-                        printf("Enter the number of events to record:\n");
+                        printf("Enter the time in milliseconds to wait before recording:\n");
                         char buffer[32] = "";
                         if(!fgets(buffer, sizeof(buffer), stdin)){
                                 continue;
                         }
-                        numEvents = strtoul(buffer, NULL, 0);
+                        delay_record_time = strtoul(buffer, NULL, 0);
                 }while(0);
-                if(recordEvents()){
+                unsigned long record_time;
+                do{
+                        printf("Enter the time in milliseconds for the recording length:\n");
+                        char buffer[32] = "";
+                        if(!fgets(buffer, sizeof(buffer), stdin)){
+                                continue;
+                        }
+                        record_time = strtoul(buffer, NULL, 0);
+                }while(0);
+                do{
+                        printf("Enter the time in milliseconds for the first event's delay value:\n");
+                        char buffer[32] = "";
+                        if(!fgets(buffer, sizeof(buffer), stdin)){
+                                continue;
+                        }
+                        first_event_delay = strtoul(buffer, NULL, 0);
+                }while(0);
+                if(recordEvents(delay_record_time, record_time)){
                         fclose(record_fp);
                         return 1;
                 }
