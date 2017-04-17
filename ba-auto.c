@@ -81,7 +81,7 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam){
                         x = 65535 * (double)x/desktop.right;
                         y = 65535 * (double)y/desktop.bottom;
                 }
-                unsigned long flags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
+                unsigned long flags = MOUSEEVENTF_ABSOLUTE;
                 switch(wParam){
                         case WM_LBUTTONDOWN:
                                 flags |= MOUSEEVENTF_LEFTDOWN;
