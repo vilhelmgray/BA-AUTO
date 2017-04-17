@@ -1,0 +1,76 @@
+BA-AUTO
+=======
+
+About
+-----
+
+BA-AUTO is a simple input event automation utility for the Windows
+operating system. BA-AUTO can record a sequence of input events to a
+file, as well as play back a sequence of input events read from a file.
+
+History
+-------
+
+I recall 2006 as a pivotal year when I ingrained my determination to
+progress my programming skill. In particular, some time between December
+10, 2006, and January 1, 2007, I made a personal commitment to
+self-actualize a general-purpose input event automation utility.
+
+I had discovered a programming language called AutoIt in the second half
+of 2006 which featured a BASIC dialect that allowed me develop Windows
+GUI applications. At the time, I had very little programming experience
+-- some Windows BATCH scripting, TI-BASIC, and possibly tidbits of
+Javascript, Perl, and PHP experience; AutoIt provided me a way top
+develop applications which looked as behaved like modern programs, so I
+was naturally eager to learn.
+
+However, being a young teenager, self-taught script kiddie, and
+essentially a code monkey n00b, I would frequently ask for assistance
+on online forums and message board. My quite obvious inexperience was
+apparent to the more veteran programmers, who would graciously guide or
+fiercely flame me in my eyes.
+
+One day near the end of 2006 I had an idea for a general-purpose input
+event automation utility (which I named "BA-AUTO" after my then online
+pseudonym "BA-LA"). I posted several help requests (most within a 2-day
+period) on the main AutoIt forum regarding various issues I encountered
+while attempting to develop BA-AUTO. My troubles ranged from how to
+detect events to understanding the concept of arrays; it was apparent
+that I was grossly inexperienced.
+
+One of the veteran programmers sent me a private message, after noticing
+my frequent forum posts request solutions to trivial programming tasks,
+urging me to give up on my BA-AUTO program. "It's just not going to
+happen," I recall the private message stating. Although now I understand
+that the veteran programmer was not trying to be mean-spirited, at the
+time I felt very angry at the notion: it irked me that someone would say
+I could not achieve what I wanted.
+
+However, the veteran programmer was correct: I required a linked-list in
+order to dynamically store input events as I had originally envisioned
+for looping -- and I was no way near the programming skill level to
+grasp the concept of a linked-list (I could barely understand static
+arrays at the time). So after about a year of development, I only had a
+clunky mouse event automation program and a clunky keyboard event
+automation program, neither of which fully performed as the
+general-purpose input event automation utility I had originally
+envisioned.
+
+Despite not completing BA-AUTO by the end of 2007, I promised myself
+that I would some day prove that veteran programmer wrong and complete
+BA-AUTO as a valid general-purpose input event automation utility. In
+April, 2017, I remembered my promise to myself and -- now that I have
+more than adequate programming experience and skill -- completed BA-AUTO
+to my satisfaction on April 17, 2017.
+
+Licensing
+---------
+
+BA-AUTO is released under the BSD 2-clause "Simplified" License.
+
+See the file LICENSE for copying conditions.
+
+Contact
+-------
+
+William Breathitt Gray <vilhelm.gray@gmail.com>
